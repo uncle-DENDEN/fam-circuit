@@ -1,23 +1,21 @@
 #!/bin/bash
-cifar_path="/user_data/weifanw/cifar-100-python"  # cifar saving path
-cwd="/user_data/weifanw/familiarity_clean"  # project directory
+cifar_path=""  # cifar saving path
+cwd=""  # project directory
 
-# =====================================================================================================
-# common params
-r_in_path="input_famassoc/r_in_cifar_all_noise_abs_5_4_10_64_8_8.npy"
-postfix="v5_wie=20_mix50%_all"
-task="assoc"
-wie=20
-
-tau_train=150
-gamma=30
-num_epoch=5
-out_path_train="weights_famassoc"
-
+# params =====================================================================================================
+task="assoc" 
+wie=30  
+tau_train=150  
+gamma=30 
+num_epoch=5 
 tau_test_1=1000
 si_1=50
 tau_test_2=500
 si_2=250
+postfix="mix50%_all"  # add to the end of file name, label additional experiment details
+# =============================================================================================================
+
+out_path_train="weights_famassoc"
 out_path_test="response_famassoc"
 
 mkdir -p ${cwd}/log_assoc
@@ -39,6 +37,8 @@ EOF
 else
   echo "Input file existed, skipped."
 fi
+
+r_in_path="input_famassoc/r_in_cifar_all_noise_abs_5_4_10_64_8_8.npy"
 
 ## get pre-trained response and BCM threshold
 pids_1=()

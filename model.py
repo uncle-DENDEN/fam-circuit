@@ -45,7 +45,7 @@ class ProtoRNN(nn.Module):
         self.wee = 5.0 / self.N_neighbors 
 
         self.tau_wrp = 2e9
-        self.tau_theta = 1e6
+        self.tau_theta = 1e7
 
         # scalars in the dynamical equation
         self.gamma = 1.0
@@ -149,10 +149,10 @@ class ProtoRNN(nn.Module):
         ui = f.relu(ui + duidt)
 
         theta_cov = torch.outer((re * (re - self._theta) * (1 / self._theta)), re)
-        dwrpdt = 1.0 / self.tau_wrp * theta_cov * self._mask  # * (decay ** (t // int(self.tau_stim)))
+        dwrpdt = 1.0 / self.tau_wrp * theta_cov * self._mask * (decay ** (t // int(self.tau_stim)))
         self._wrp += self.delta_t * dwrpdt
         self._wrp.clip_(0, self.wrp_max)
-        dthetadt = 1.0 / self.tau_theta * (-self._theta + re ** 2)
+        dthetadt = 1.0 / self.tau_theta * (self._theta + re ** 2)
         self._theta += self.delta_t * dthetadt
         
         return ue, ui

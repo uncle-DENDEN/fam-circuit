@@ -1,5 +1,5 @@
 #!/bin/bash
-cwd="/user_data/weifanw/familiarity_clean"  # project directory
+cwd=""  # project directory
 
 # =====================================================================================================
 # set all parameter the same as the those used in the simulation
@@ -17,7 +17,7 @@ logfile=${cwd}/log_assoc/plot_assoc_Fig4,S3.txt
 input_path="input_famassoc/r_in_cifar_all_noise_abs_5_4_10_64_8_8.npy"
 pre_path="response_famassoc/r_pre_${tau_test_1}ms_5_4x10_${si_1}_64_8_8_${postfix}.npy"
 post_path="response_famassoc/r_epoch0_tx${gamma}_${tau_test_1}ms_5_4x10_${si_1}_64_8_8_${postfix}.npy"
-post_path_hr="response_famassoc/r_epoch0_tx${gamma}_${tau_test_2}ms_5_4x10_${si_2}_64_8_8_${postfix}.npy"
+post_path_hr="response_famassoc/r_epoch4_tx${gamma}_${tau_test_2}ms_5_4x10_${si_2}_64_8_8_${postfix}.npy"
 
 echo "plotting Fig4, FigS3..."
 srun -p cpu -n1 --mem=20GB --time=1:00:00 --pty bash << EOF &> $logfile &

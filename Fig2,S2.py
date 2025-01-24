@@ -15,6 +15,8 @@ def parse_args():
     parser = argparse.ArgumentParser("Fig2, S2")
     parser.add_argument("--pre_path", type=str, required=True)
     parser.add_argument("--post_path", type=str, required=True)
+    parser.add_argument("--pre_path_sweep", type=str, required=True)
+    parser.add_argument("--post_path_sweep", type=str, required=True)
     parser.add_argument("--task", type=str, required=True)
     parser.add_argument("--wies", type=float, nargs="+", default=[10, 15, 20, 25, 30, 35, 40, 45, 50])
 
@@ -23,9 +25,9 @@ def parse_args():
 args = parse_args()
 
 ## figure parameter
-SMALL_SIZE = 10
-MEDIUM_SIZE = 15
-BIGGER_SIZE = 18
+SMALL_SIZE = 8
+MEDIUM_SIZE = 12
+BIGGER_SIZE = 16
 
 plt.rc('font', size=MEDIUM_SIZE)          # controls default text sizes
 plt.rc('axes', titlesize=BIGGER_SIZE)     # fontsize of the axes title
@@ -58,7 +60,7 @@ def sparseness(tuning):
 
 def replace_wie(filename, wie):
     pattern = r'8_8_(\d+)'
-    return re.sub(pattern, f'8_8_{wie}', filename)
+    return re.sub(pattern, f'8_8_{int(wie)}', filename)
 
 
 def Fig_2B_S3A(pre_path, post_path, task='effects'):
@@ -185,8 +187,8 @@ def Fig2CDE_S3BC(pre_path, post_path, task='effects'):
         fig, ax = plt.subplots(1, 1, constrained_layout=True, figsize=(4.2, 4))
 
         # idx = np.argwhere((sp_diff > 0) & (sp_diff < 0.2))
-        idx = np.argwhere(sp_diff > 0.02)
-        i = 200
+        idx = np.argwhere(sp_diff > 0.025)
+        i = 6
         tm_before_ = np.sort(tm_before[:, idx], axis=0)[::-1]
         tm_after_ = np.sort(tm_after[:, idx], axis=0)[::-1]
         ax.plot(tm_before_[:, i], alpha=.8, label='before', linewidth=2)
@@ -211,7 +213,7 @@ def Fig2CDE_S3BC(pre_path, post_path, task='effects'):
         fig.savefig(os.path.join(save_dir, save_name))
 
     
-def FigS2(pre_path, post_path, wies):
+def FigS2(pre_path_sweep, post_path_sweep, wies):
 
     ## save dir
     save_dir = 'figs/figS2'
@@ -222,8 +224,8 @@ def FigS2(pre_path, post_path, wies):
     ys_before_all = []
     ys_after_all = []
     for wie in wies:
-        ys_before = np.load(replace_wie(pre_path, wie))
-        ys_after = np.load(replace_wie(post_path, wie))
+        ys_before = np.load(replace_wie(pre_path_sweep, wie))
+        ys_after = np.load(replace_wie(post_path_sweep, wie))
         ys_before_exc = f.r_numpy(ys_before[:, :, :f.N_e])
         ys_after_exc = f.r_numpy(ys_after[:, :, :f.N_e])
         
@@ -250,7 +252,7 @@ def FigS2(pre_path, post_path, wies):
 
     fig, ax = plt.subplots(1, 1, constrained_layout=True, figsize=(4, 3.3))
     ax.plot(sup_ind, '-o', color='k')
-    ax.set_xticks(np.arange(len(wies)), wies)
+    ax.set_xticks(np.arange(len(wies)), wies, rotation=45)
     ax.set_xlabel('E-I connection strength')
     ax.set_ylabel('suppression index')
     ax.axvline(x=1, linestyle='--', linewidth=2, color='k')
@@ -264,9 +266,9 @@ def FigS2(pre_path, post_path, wies):
     tm_before_all = []
     tm_after_all = []
     for wie in wies:
-        tm_before = np.load(replace_wie(pre_path, wie))
+        tm_before = np.load(replace_wie(pre_path_sweep, wie))
         tm_before = tm_before[:, -2:].mean(1)
-        tm_after = np.load(replace_wie(post_path, wie))
+        tm_after = np.load(replace_wie(post_path_sweep, wie))
         tm_after = tm_after[:, -2:].mean(1)
 
         tm_before = f.r_numpy(tm_before[:, :f.N_e])
@@ -299,7 +301,7 @@ def FigS2(pre_path, post_path, wies):
                 verticalalignment='center')
     
     ax.axvline(x=1, linestyle='--', linewidth=2, color='k')
-    ax.set_xticks(np.arange(len(wies)), wies)
+    ax.set_xticks(np.arange(len(wies)), wies, rotation=45)
     ax.set_xlabel('E-I connection strength')
     ax.set_ylabel(r'mean $\Delta$ sparseness index')
     ax.set_xlim(-0.2, 8.2)
@@ -312,8 +314,8 @@ def FigS2(pre_path, post_path, wies):
 
 if __name__ == '__main__':
     
-    Fig_2B_S3A(args.pre_path, args.post_path, args.task)
-    Fig2CDE_S3BC(args.pre_path, args.post_path, args.task)
-    FigS2(args.pre_path, args.post_path, args.wies)
+    # Fig_2B_S3A(args.pre_path, args.post_path, args.task)
+    # Fig2CDE_S3BC(args.pre_path, args.post_path, args.task)
+    FigS2(args.pre_path_sweep, args.post_path_sweep, args.wies)
     print('== ploting finished ==')
     

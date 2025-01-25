@@ -63,7 +63,7 @@ class plot_fam_assoc:
         ys_all = [ys_pre]
         del ys_pre
         for i in range(5):
-            ys_e = np.load(replace_epoch(post_path), insertTeachingSig) 
+            ys_e = np.load(replace_epoch(post_path, i)) 
             ys_e = seqUnmix(ys_e, t_ind, n_ind, n_imgs=5, npa=10)[..., :f.N_e] 
             ys_e = f.r_numpy(ys_e)[:, -2:].mean(-2)
             ys_all.append(ys_e)
@@ -81,7 +81,7 @@ class plot_fam_assoc:
 
         # output_path
         self.fig4_path = 'figs/fig4'
-        Path(self.fig3_path).mkdir(parents=True, exist_ok=True)
+        Path(self.fig4_path).mkdir(parents=True, exist_ok=True)
         self.figS3_path = 'figs/figS3'
         Path(self.figS3_path).mkdir(parents=True, exist_ok=True)
     
@@ -115,7 +115,7 @@ class plot_fam_assoc:
 
         return X_vs, ff_v
     
-    def cross_img_normalization(dis, ref):
+    def cross_img_normalization(self, dis, ref):
         day, nl, img, pc = dis.shape
         dis = dis.reshape(day, nl, img, 1, pc)  # nl, img, 1, pc
         ref = ref.reshape(day, 1, 1, img, pc)  # 1, 1, img, pc
@@ -135,25 +135,23 @@ class plot_fam_assoc:
             pca.fit(self.ys_all_exc[d])
             pcd.append(pca.explained_variance_ratio_)
 
+        fig, ax = plt.subplots(1, 1, constrained_layout=True, figsize=(4, 2))
         labels = ['input', 'pre-trained', 'output']
         cols = ["#7E2F8E", "#0072BD", "#77AC30"]
         for d in [0, 2]:
-            plt.plot(pcd[d][:100], 'o-', markersize=6, color=cols[d], mfc=cols[d], mec='white', label=f'{labels[d]}')
+            ax.plot(pcd[d][:100], 'o-', markersize=6, color=cols[d], mfc=cols[d], mec='white', label=f'{labels[d]}')
             
-        plt.legend(frameon=False)
+        ax.legend(frameon=False)
 
-        fig = plt.gcf()
-        fig.set_size_inches(4, 2)
-
-        ax = plt.gca()
         ax.spines.right.set_visible(False)
         ax.spines.top.set_visible(False)
         ax.set_ylabel('variance')
         ax.set_xlabel('PCs')
-        plt.savefig(osp.join(self.figS3_path, 'figS3G.png'))
+        
+        fig.savefig(osp.join(self.figS3_path, 'figS3G.png'))
 
     def FigS3DE(self):
-        ff_v, X_vs = self.mds(self.ys_all_exc, self.ff_o)
+        X_vs, ff_v = self.mds(self.ys_all_exc, self.ff_o)
         
         # noise cone
         X_v = X_vs[-1].mean(0)  # 4, 10, 3
@@ -182,7 +180,7 @@ class plot_fam_assoc:
         ax.set_yticks([-1.7, 0, 1.5], [-1.7, 0, 1.5])
         ax.set_xticks([-1.6, 0, 1.6], [-1.6, 0, 1.6])
 
-        plt.savefig(osp.join(self.figS3_path, 'figS3D.png'))
+        fig.savefig(osp.join(self.figS3_path, 'figS3D.png'))
 
         # concept cone
         X_v = X_vs[-1].mean(-2)  # 5, 4, 3
@@ -211,7 +209,7 @@ class plot_fam_assoc:
         ax.set_yticks([-7, 0, 7], [-7, 0, 7])
         ax.set_xticks([-7, 0, 7], [-7, 0, 7])
 
-        plt.savefig(osp.join(self.figS3_path, 'figS3E.png'))
+        fig.savefig(osp.join(self.figS3_path, 'figS3E.png'))
 
     def Fig4EG(self):
         X, ff = self.pca(self.ys_all_exc, self.ff_o)
@@ -249,7 +247,7 @@ class plot_fam_assoc:
         day_num, nl, n_img = cosine_dist.shape
         levels = (1, 2, 3)
         labels = ("10%", "30%", "50%")
-        cols = ("#7E2F8E", "#0072BD", "#77AC30")
+        # cols = ("#7E2F8E", "#0072BD", "#77AC30")
 
         dodge = 0.23
         dodge2 = 0.15
@@ -269,12 +267,12 @@ class plot_fam_assoc:
             cds_mean = cds.mean(-1)
             cds_sem = cds.std()
             e1 = axs[0].errorbar(n+dodge, cds_mean, yerr=cds_sem, elinewidth=2.6, fmt='o', capsize=2, 
-                                capthick=2.6, color=cols[n], markersize=9, label='after')
+                                capthick=2.6, color=plt.cm.plasma((n+1)/4), markersize=9, label='after')
             
             cds_pre_mean = cds_pre.mean()
             cds_pre_sem = cds_pre.std()
             e2 = axs[0].errorbar(n-dodge, cds_pre_mean, yerr=cds_pre_sem, elinewidth=2.6, fmt='^', capsize=2, 
-                                capthick=2.6, color=cols[n], markersize=12, label='before')
+                                capthick=2.6, color=plt.cm.plasma((n+1)/4), markersize=12, label='before')
             
             y_pos = max(cds.max(), cds_pre.max())
             axs[0].plot([n-dodge, n+dodge], [y_pos+y_margin, y_pos+y_margin], color='k', linewidth=2)
@@ -285,12 +283,12 @@ class plot_fam_assoc:
             cds2_mean = cds2.mean(-1)
             cds2_sem = cds2.std()
             f1 = axs[1].errorbar(n+dodge, cds2_mean, yerr=cds2_sem, elinewidth=2.6, fmt='o', capsize=2, 
-                                capthick=2.6, color=cols[n], markersize=9, label='after')
+                                capthick=2.6, color=plt.cm.plasma((n+1)/4), markersize=9, label='after')
             
             cds2_pre_mean = cds2_pre.mean()
             cds2_pre_sem = cds2_pre.std()
             f2 = axs[1].errorbar(n-dodge, cds2_pre_mean, yerr=cds2_pre_sem, elinewidth=2.6, fmt='^', capsize=2, 
-                                capthick=2.6, color=cols[n], markersize=12, label='before')
+                                capthick=2.6, color=plt.cm.plasma((n+1)/4), markersize=12, label='before')
             
             y_pos = max(cds2.max(), cds2_pre.max())
             axs[1].plot([n-dodge, n+dodge], [y_pos+y_margin, y_pos+y_margin], color='k', linewidth=2)
@@ -326,7 +324,7 @@ class plot_fam_assoc:
         axs[1].spines['bottom'].set_linewidth(1.5)
         axs[1].spines['left'].set_linewidth(1.5)
 
-        fig.savefig(osp.join(self.fig4_path), 'Fig4EG.png')   
+        fig.savefig(osp.join(self.fig4_path, 'Fig4EG.png'))   
 
     def Fig4B(self, ni=0):
         pca = PCA(n_components=3)
@@ -360,7 +358,7 @@ class plot_fam_assoc:
         ax.set_box_aspect([2,2,2])  # Make the plot cubic
         ax.set_position([0.1, 0.1, 0.9, 0.9])  # [left, bottom, width, height]
 
-        fig.savefig(self.fig4_path, 'fig4B.png')
+        fig.savefig(osp.join(self.fig4_path, 'fig4B.png'))
 
 
 if __name__ == '__main__':
@@ -388,4 +386,3 @@ if __name__ == '__main__':
     plot.Fig4EG()
     plot.FigS3DE()
     plot.FigS3G()
-    

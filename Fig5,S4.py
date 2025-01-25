@@ -45,11 +45,13 @@ f.to(torch.device("cpu"))
 def replace_epoch(path, epoch):
     epoch_pos = path.find('epoch')
     end_pos = epoch_pos + 5 
-    
     while end_pos < len(path) and path[end_pos].isdigit():
         end_pos += 1
-
-    new_path = path[:epoch_pos + 5] + str(epoch) + path[end_pos:]
+    
+    if epoch == 'pre':
+        new_path = path[:epoch_pos] + str(epoch) + path[end_pos:]
+    else:
+        new_path = path[:epoch_pos + 5] + str(epoch) + path[end_pos:]
 
     return new_path
 
@@ -84,12 +86,12 @@ class plot_mode:
 
         # output_path
         self.fig5_path = 'figs/fig5'
-        Path(self.fig3_path).mkdir(parents=True, exist_ok=True)
+        Path(self.fig5_path).mkdir(parents=True, exist_ok=True)
         self.figS4_path = 'figs/figS4'
-        Path(self.figS3_path).mkdir(parents=True, exist_ok=True)
+        Path(self.figS4_path).mkdir(parents=True, exist_ok=True)
 
-    def get_eigspec(self, num_modes=8192):
-        eigd = joblib.load(self.jac_path)
+    def get_eigspec(self, epoch, num_modes=8192):
+        eigd = joblib.load(replace_epoch(self.jac_path, epoch))
        
         eigspec = eigd['val']
         vl = eigd['vl']
@@ -100,7 +102,7 @@ class plot_mode:
         
         return eigspec, mode_s, mode_s_prime
     
-    def get_normalized_dist(fp):
+    def get_normalized_dist(self, fp):
         day, nl, img, _ = fp.shape
         ds = [1, 2, 2]
 
@@ -136,7 +138,7 @@ class plot_mode:
         ys_all = [ys_pre]
         del ys_pre
         for i in range(5):
-            ys_e = np.load(replace_epoch(self.post_response_path), i)[..., :f.N_e]
+            ys_e = np.load(replace_epoch(self.post_response_path, i))[..., :f.N_e]
             ys_e = seqUnmix(ys_e, self.t_ind, self.n_ind, n_imgs=self.num_imgs, npa=10)
             ys_e = f.r_numpy(ys_e)[:, -2:].mean(-2)
             ys_all.append(ys_e)
@@ -249,7 +251,7 @@ class plot_mode:
     
     def Fig5AB(self):
         # 5A
-        eigs, _, vl_prime = self.get_eigspec(epoch=4, img=0, nl=1)
+        eigs, _, vl_prime = self.get_eigspec(epoch=4)
         timescale = -1 / eigs
 
         vl_prime_norm = np.linalg.norm(vl_prime, axis=0)
@@ -297,7 +299,7 @@ class plot_mode:
         group1s, group3s, group4s = [], [], []
         for i in range(self.num_imgs):
             for l in [0, 1, 2]:
-                eigs, _, vl_prime = self.get_eigspec(epoch='pre', img=i, nl=l)
+                eigs, _, vl_prime = self.get_eigspec(epoch='pre')
                 
                 vl_prime_norm = np.linalg.norm(vl_prime, axis=0)
                 eff_dim = np.where(vl_prime_norm == 0)[0][0]
@@ -311,7 +313,7 @@ class plot_mode:
                 group4s.append(group4)
 
                 for e in range(5):
-                    eigs, _, vl_prime = self.get_eigspec(epoch=e, img=i, nl=l)
+                    eigs, _, vl_prime = self.get_eigspec(epoch=e)
 
                     vl_prime_norm = np.linalg.norm(vl_prime, axis=0)
                     eff_dim = np.where(vl_prime_norm == 0)[0][0]
@@ -373,7 +375,7 @@ class plot_mode:
         nnd = 49
         data = [ddc_ff, ddc_i[(nnd-1)//4, -1], ddc[-1], ddc_o[(nnd-1)//4, -1]]
 
-        fig, ax = plt.subplots(1, 1, tight_layout=True, figsize=(4, 4))
+        fig, ax = plt.subplots(1, 1, tight_layout=True, figsize=(5.4, 4))
         x = np.arange(3)
         ax.set_xticks(np.arange(3), ['0%->10%', '10%->30%', '30%->50%'])
         ax.set_yticks([0.0, 0.2, 0.4, 0.6], [0.0, 0.2, 0.4, 0.6])
@@ -386,7 +388,7 @@ class plot_mode:
             mat_sem = sem(mat, -1)
             label = labels[i]
             fmt = fmts[i]
-            col ="blue" if (i == 0 or i == 1) else "tab:red"
+            col ="#0072BD" if (i == 0 or i == 1) else "firebrick"
             ax.errorbar(x_, mat_mean, yerr=mat_sem, fmt=fmt, label=label,
                         color=col, elinewidth=2.6, capsize=5, markersize=8)
         ax.text(0.2, 0.5, r'$\alpha$', fontsize=15)
@@ -410,7 +412,7 @@ class plot_mode:
         x_plot = np.arange(0, 200, 4)+1
         fmt = ['--', '-', ':']
         labels = ['0%-10%', '10%-30%', '30%-50%']
-        cols = ("#7E2F8E", "#0072BD", "#77AC30")
+        # cols = ("#7E2F8E", "#0072BD", "#77AC30")
         for nl in range(3):
             di = (data[1][:, nl] - np.expand_dims(data[0][nl], 0)) / np.expand_dims(data[0][nl], 0)
             do = (data[3][:, nl] - np.expand_dims(data[2][nl], 0)) / np.expand_dims(data[2][nl], 0)
@@ -420,11 +422,11 @@ class plot_mode:
             do_sem = sem(do, -1)
             
             # plot
-            ax1.plot(x_plot, di_mean, fmt[nl], label=labels[nl], color=cols[nl])
-            ax1.fill_between(x_plot, di_mean+di_sem, di_mean-di_sem, alpha=.3, color=cols[nl])
+            ax1.plot(x_plot, di_mean, fmt[nl], label=labels[nl], color=plt.cm.plasma((nl+1)/4))
+            ax1.fill_between(x_plot, di_mean+di_sem, di_mean-di_sem, alpha=.3, color=plt.cm.plasma((nl+1)/4))
             ax1.scatter([49], [di_mean[12]], marker='o', edgecolor='white', facecolor='k', zorder=2)
-            ax2.plot(x_plot, do_mean, fmt[nl], label=labels[nl], color=cols[nl])
-            ax2.fill_between(x_plot, do_mean+do_sem, do_mean-do_sem, alpha=.3, color=cols[nl])
+            ax2.plot(x_plot, do_mean, fmt[nl], label=labels[nl], color=plt.cm.plasma((nl+1)/4))
+            ax2.fill_between(x_plot, do_mean+do_sem, do_mean-do_sem, alpha=.3, color=plt.cm.plasma((nl+1)/4))
             ax2.scatter([49], [do_mean[12]], marker='o', edgecolor='white', facecolor='k', zorder=2)
             ax2.legend(frameon=False, loc='upper right')
             ax1.set_ylabel(r'$\mathcal{D}_{N/C}$ relative difference')
@@ -467,7 +469,7 @@ class plot_mode:
         dodge = 0.3
         fig, axs = plt.subplots(1, 3, constrained_layout=True, figsize=(12, 3.4))
         locs = ['upper left', 'upper right', 'lower right']
-        cols = ("#7E2F8E", "#0072BD", "#77AC30")
+        # cols = ("#7E2F8E", "#0072BD", "#77AC30")
         for i, (ax, ddc_pair) in enumerate(zip(axs, ddc_all)):
             post, pre = ddc_pair 
             post_mean = post.mean(-1)[:, :] 
@@ -480,24 +482,24 @@ class plot_mode:
             ax.plot([], [], 'x', color='black', label='pre')
             for m in range(3):
                 ax.errorbar(m - dodge, pre_mean[m], yerr=pre_sem[m], fmt='x', 
-                            color=cols[m], elinewidth=1.6, capsize=2, )
+                            color=plt.cm.plasma((m+1)/4), elinewidth=1.6, capsize=2, )
             ax.plot([], [], 'o', color='black', label='epoch1')
             for m in range(3):
                 ax.errorbar(m, post_mean[0, m], yerr=post_sem[0, m], fmt='o', 
-                            color=cols[m], elinewidth=1.6, capsize=2, )
+                            color=plt.cm.plasma((m+1)/4), elinewidth=1.6, capsize=2, )
             ax.plot([], [], '^', color='black', label='epoch5')
             for m in range(3):
                 ax.errorbar(m + dodge, post_mean[-1, m], yerr=post_sem[-1, m], fmt='^', 
-                            color=cols[m], elinewidth=1.6, capsize=2, )
+                            color=plt.cm.plasma((m+1)/4), elinewidth=1.6, capsize=2, )
             
             for j in range(3):
                 x_ = [j-dodge, j, j+dodge]
                 y = [pre_mean[j], post_mean[0, j], post_mean[-1, j]]
-                ax.plot(x_, y, '-', color=cols[j])
+                ax.plot(x_, y, '-', color=plt.cm.plasma((j+1)/4))
                 
                 for m in range(5):
                     y = [pre[j, m], post[0, j, m], post[-1, j, m]]
-                    ax.plot(x_, y, ':.', color=cols[j], alpha=.3)
+                    ax.plot(x_, y, ':.', color=plt.cm.plasma((j+1)/4), alpha=.3)
 
             ax.set_xticks([0, 1, 2], ['0%->10%', '10%->30%', '30%->50%'])
             ax.spines['right'].set_visible(False)
@@ -514,7 +516,7 @@ class plot_mode:
 
         dodge = 0.3
         x = np.repeat(np.arange(3), self.num_imgs)
-        cols = ("#7E2F8E", "#0072BD", "#77AC30")
+        # cols = ("#7E2F8E", "#0072BD", "#77AC30")
 
         fig, axs = plt.subplots(1, 2, constrained_layout=True, figsize=(8, 4))
         tts = [r'$L^T r$', r'$\tilde{L}^T \alpha$']
@@ -531,7 +533,7 @@ class plot_mode:
             labels = ['0%-10%', '10%-30%', '30%-50%']
             x_plot = np.arange(0, 200, 4)+1
             for i in range(3):
-                ax.plot(x_plot, rrs[:, i], fmt[i], label=labels[i], color=cols[i])
+                ax.plot(x_plot, rrs[:, i], fmt[i], label=labels[i], color=plt.cm.plasma((i+1)/4))
                 ax.scatter([49], [rrs[12, i]], marker='o', edgecolor='white', facecolor='k', zorder=2)
             ax.axhline(y=0, xmin=0.04, xmax=0.96, linewidth=1, color='r')
             if j == 1:

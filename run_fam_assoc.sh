@@ -1,6 +1,6 @@
 #!/bin/bash
-cifar_path=""  # cifar saving path
-cwd=""  # project directory
+cifar_path="/user_data/weifanw/cifar-100-python"  # cifar saving path
+cwd="/user_data/weifanw/familiarity_clean"  # project directory
 
 # params =====================================================================================================
 task="assoc" 
@@ -156,7 +156,6 @@ wrp_path="weights_famassoc/weight_epoch0_tx${gamma}_${tau_train}ms_5_4x10_64_8_8
 response_path="response_famassoc/r_epoch0_tx${gamma}_${tau_test_1}ms_5_4x10_${si_1}_64_8_8_${postfix}.npy"
 response_path_pre="response_famassoc/r_pre_${tau_test_1}ms_5_4x10_${si_1}_64_8_8_${postfix}.npy"
 
-jac_epoch='epoch4'
 jac_img=1
 jac_level='10%'
 jac_sample=0
@@ -167,7 +166,7 @@ srun -p cpu -n1 --mem=80GB --time=8-00:00:00 --pty bash << EOF &> $logfile &
   module load anaconda3
   source activate fam
   cd ${cwd}
-  python find_proj_dist.py --input_path ${r_in_path} --weight_path ${wrp_path} --response_path ${response_path} --response_path_pre ${response_path_pre} --save_jac ${jac_epoch} ${jac_img} ${jac_level} ${jac_sample}
+  python find_proj_dist.py --input_path ${r_in_path} --weight_path ${wrp_path} --response_path ${response_path} --response_path_pre ${response_path_pre} --save_jac ${jac_img} ${jac_level} ${jac_sample}
 EOF
 pid4=$!
 wait $pid4

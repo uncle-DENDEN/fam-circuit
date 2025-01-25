@@ -1,5 +1,5 @@
 #!/bin/bash
-cwd=""  # project directory
+cwd="/user_data/weifanw/familiarity_clean"  # project directory
 
 # ====================================================================================================
 # set all parameter the same as the those used in the simulation
@@ -12,6 +12,8 @@ gamma=30
 tau_test=500
 si=250
 si_sweep=25
+
+mkdir -p ${cwd}/log_assoc
 
 # plotting
 logfile=${cwd}/log_effects/plot_effects.txt

@@ -84,7 +84,7 @@ def Fig_2B_S3A(pre_path, post_path, task='effects'):
     psth_before = np.insert(ys_mean_before, 0, 0)
     psth_before = psth_before / psth_before.max()
 
-    figsize=(4, 3.5) if task == 'assoc' else (7, 3.5)
+    figsize=(4, 3.5) if task == 'assoc' else (6, 3.5)
     fig, axs = plt.subplots(1, 1, constrained_layout=True, figsize=figsize)
     x = np.insert(np.arange(0, 220, 2), 0, -10)
     axs.plot(x, psth_before[:111], '-', label='before', color='black')
@@ -132,14 +132,15 @@ def Fig2CDE_S3BC(pre_path, post_path, task='effects'):
     save_dir = 'figs/fig2' if task == 'effects' else 'figs/figS3'
     Path(save_dir).mkdir(parents=True, exist_ok=True)
 
-    # sparsity vs max tuning
+    # max response
     max_before = tm_before.max(0)
     max_after = tm_after.max(0)
     max_diff = (max_after - max_before) / (max_after + max_before + 1e-8)
 
     _, p = ttest_1samp(max_diff, 0, alternative='greater')
 
-    fig, axs = plt.subplots(1, 1, constrained_layout=True, figsize=(4, 2.2))
+    figsize=(4, 4) if task == 'effects' else (4, 2.2)
+    fig, axs = plt.subplots(1, 1, constrained_layout=True, figsize=figsize)
     sns.histplot(max_diff, bins=100, kde=True, ax=axs)
     axs.set_xlabel(r'$\Delta$ response peak')
     _, ymax = axs.get_ylim()
@@ -164,7 +165,7 @@ def Fig2CDE_S3BC(pre_path, post_path, task='effects'):
 
     stat, p = ttest_1samp(sp_diff, 0, alternative='greater')
 
-    fig, axs = plt.subplots(1, 1, constrained_layout=True, figsize=(4, 2.2))
+    fig, axs = plt.subplots(1, 1, constrained_layout=True, figsize=figsize)
     sns.histplot(sp_diff, bins=100, kde=True, ax=axs)
     _, ymax = axs.get_ylim()
     axs.plot(np.mean(sp_diff), ymax, marker='v', markersize=7, 

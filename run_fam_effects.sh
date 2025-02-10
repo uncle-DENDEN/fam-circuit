@@ -1,6 +1,6 @@
 #!/bin/bash
-cifar_path=""  # cifar saving path
-cwd=""  # project directory
+cifar_path="/user_data/weifanw/cifar-100-python"  # cifar saving path
+cwd="/user_data/weifanw/familiarity_clean"  # project directory
 
 # ====================================================================================================
 # params

@@ -1,6 +1,6 @@
 from utils import *
 from model import ProtoRNN
-from scipy.stats import pearsonr, ttest_1samp
+from scipy.stats import *
 import matplotlib.pyplot as plt
 from matplotlib.gridspec import GridSpec
 from pathlib import Path
@@ -25,9 +25,9 @@ def parse_args():
 args = parse_args()
 
 ## figure parameter
-SMALL_SIZE = 8
-MEDIUM_SIZE = 12
-BIGGER_SIZE = 16
+SMALL_SIZE = 10
+MEDIUM_SIZE = 15
+BIGGER_SIZE = 18
 
 plt.rc('font', size=MEDIUM_SIZE)          # controls default text sizes
 plt.rc('axes', titlesize=BIGGER_SIZE)     # fontsize of the axes title
@@ -89,7 +89,7 @@ def Fig_2B_S3A(pre_path, post_path, task='effects'):
     x = np.insert(np.arange(0, 220, 2), 0, -10)
     axs.plot(x, psth_before[:111], '-', label='before', color='black')
     axs.plot(x, psth_after[:111], "--", label='after', color='black')
-    axs.fill_between(x, psth_before[:111], psth_after[:111], color='yellow', alpha=.5)
+    axs.fill_between(x, psth_before[:111], psth_after[:111], color='lightgrey', alpha=.5)
     axs.axvline(x=0, linestyle='dashed', linewidth=2, color='black')
     axs.legend(frameon=False)
     axs.set_xlabel('Time (msec)')
@@ -141,7 +141,8 @@ def Fig2CDE_S3BC(pre_path, post_path, task='effects'):
 
     figsize=(4, 4) if task == 'effects' else (4, 2.2)
     fig, axs = plt.subplots(1, 1, constrained_layout=True, figsize=figsize)
-    sns.histplot(max_diff, bins=100, kde=True, ax=axs)
+    sns.histplot(max_diff, bins=20, kde=True, ax=axs, alpha=.5, color='#81B8DA') 
+                 # facecolor='powderblue', edgecolor='k', line_kws={'color': 'k'})
     axs.set_xlabel(r'$\Delta$ response peak')
     _, ymax = axs.get_ylim()
     axs.plot(max_diff.mean(), ymax, marker='v', markersize=7, 
@@ -166,7 +167,8 @@ def Fig2CDE_S3BC(pre_path, post_path, task='effects'):
     stat, p = ttest_1samp(sp_diff, 0, alternative='greater')
 
     fig, axs = plt.subplots(1, 1, constrained_layout=True, figsize=figsize)
-    sns.histplot(sp_diff, bins=100, kde=True, ax=axs)
+    sns.histplot(sp_diff, bins=20, kde=True, ax=axs, alpha=.5, color='#81B8DA')
+                 # facecolor='powderblue', edgecolor='k', line_kws={'color': 'k'})
     _, ymax = axs.get_ylim()
     axs.plot(np.mean(sp_diff), ymax, marker='v', markersize=7, 
             markerfacecolor='black', markeredgecolor='black')
@@ -232,8 +234,8 @@ def FigS2(pre_path_sweep, post_path_sweep, wies):
         
         del ys_before, ys_after
         
-        ys_mean_before = ys_before_exc.mean((0, 2))  # 250
-        ys_mean_after = ys_after_exc.mean((0, 2))  # 250
+        ys_mean_before = ys_before_exc.mean((0, 2))  # 25
+        ys_mean_after = ys_after_exc.mean((0, 2))  # 25
 
         del ys_before_exc, ys_after_exc
 
@@ -245,18 +247,28 @@ def FigS2(pre_path_sweep, post_path_sweep, wies):
 
         del ys_before_norm, ys_after_norm
 
-    ys_before_all = np.stack(ys_before_all)  # 8, 25
-    ys_after_all = np.stack(ys_after_all)  # 8, 25 
+    ys_before_all = np.stack(ys_before_all)[:, -5:].mean(-1)  # 8, t -> 8
+    ys_after_all = np.stack(ys_after_all)[:, -5:].mean(-1)  # 8, t -> 8
 
-    sup_ind = (ys_after_all - ys_before_all) / (ys_after_all + ys_before_all)
-    sup_ind = sup_ind[:, -5:].mean(-1)  # 9
+    # sup_ind = (ys_after_all - ys_before_all) / (ys_after_all + ys_before_all)
+    # sup_ind = sup_ind[:, -5:].mean(-1)  # 9
 
     fig, ax = plt.subplots(1, 1, constrained_layout=True, figsize=(4, 3.3))
-    ax.plot(sup_ind, '-o', color='k')
-    ax.set_xticks(np.arange(len(wies)), wies, rotation=45)
+    ax.plot(
+        ys_before_all, '-o', markersize=10, 
+        color='k', markeredgecolor='white', markerfacecolor='darkgrey', 
+        label='before'
+    )
+    ax.plot(
+        ys_after_all, '-o', markersize=10, 
+        color='k', markeredgecolor='white', markerfacecolor='cornflowerblue', 
+        label='after'
+    )
+    ax.set_xticks(np.arange(0, len(wies), 2), wies[::2], rotation=45)
     ax.set_xlabel('E-I connection strength')
-    ax.set_ylabel('suppression index')
-    ax.axvline(x=1, linestyle='--', linewidth=2, color='k')
+    ax.set_ylabel('steady-state response')
+    # ax.axvline(x=1, linestyle='--', linewidth=2, color='k')
+    ax.legend(frameon=False)
     ax.set_xlim(-0.2, 8.2)
 
     save_name = 'figS2A.png'
@@ -282,30 +294,46 @@ def FigS2(pre_path_sweep, post_path_sweep, wies):
     tm_after_all = np.stack(tm_after_all)  # 8, 500, Ne
 
     # sparsity index
-    sp_diff_all = []
+    sp_mean_before = []
+    sp_sem_before = []
+    sp_mean_after = []
+    sp_sem_after = []
     p_all = []
     for i in range(9):
         sp_before = sparseness(tm_before_all[i])
         sp_after = sparseness(tm_after_all[i])
-        sp_diff = (sp_after - sp_before) / (sp_after + sp_before + 1e-8)
-        sp_diff_all.append(sp_diff.mean())
+        # sp_diff = (sp_after - sp_before) / (sp_after + sp_before + 1e-8)
+        sp_mean_before.append(sp_before.mean())
+        sp_mean_after.append(sp_after.mean())
+        sp_sem_before.append(sem(sp_before))
+        sp_sem_after.append(sem(sp_after))
 
-        stat, p = ttest_1samp(sp_diff, 0, alternative='greater')
+        stat, p = ttest_rel(sp_after, sp_before, alternative='greater')
         p_all.append(p)
     
     fig, ax = plt.subplots(1, 1, constrained_layout=True, figsize=(4, 3.3))
-    ax.plot(sp_diff_all, '-o', color='k')
-    for i, (y, p) in enumerate(zip(sp_diff_all, p_all)):
-        lab = "*" if (p < 0.05) & (not np.isnan(p)) else "ns"
-        ax.text(i + 0.1, y, lab, fontsize=15, 
-                horizontalalignment='left',
-                verticalalignment='center')
+    x = np.arange(len(wies))
+    ax.errorbar(x, sp_mean_before, yerr=sp_sem_before, elinewidth=2.6, fmt='-o', 
+                color='k', markeredgecolor='white', markerfacecolor='darkgrey', ecolor='k', 
+                markersize=8, label='before')
+    ax.errorbar(x, sp_mean_after, yerr=sp_sem_after, elinewidth=2.6, fmt='-o', 
+                color='k', markeredgecolor='white', markerfacecolor='cornflowerblue', ecolor='k', 
+                markersize=8, label='after')
     
-    ax.axvline(x=1, linestyle='--', linewidth=2, color='k')
-    ax.set_xticks(np.arange(len(wies)), wies, rotation=45)
+    for i in range(len(wies)):
+        lab = "*" if (p_all[i] < 0.05) & (not np.isnan(p_all[i])) else "ns"
+        ym = max(sp_mean_after[i]+sp_sem_after[i], sp_mean_before[i]+sp_sem_before[i])
+        ax.text(i, ym+0.002, lab, fontsize=15, 
+                horizontalalignment='center',
+                verticalalignment='bottom')
+    
+    # ax.axvline(x=1, linestyle='--', linewidth=2, color='k')
+    ax.set_xticks(np.arange(0, len(wies), 2), wies[::2], rotation=45)
     ax.set_xlabel('E-I connection strength')
-    ax.set_ylabel(r'mean $\Delta$ sparseness index')
+    ax.set_ylabel(r'sparseness index')
     ax.set_xlim(-0.2, 8.2)
+    ax.set_ylim(0.91, 0.995)
+    ax.legend(frameon=False)
     # ax.set_ylim(0, 0.0046)
     
     fig = plt.gcf()
@@ -316,7 +344,10 @@ def FigS2(pre_path_sweep, post_path_sweep, wies):
 if __name__ == '__main__':
     
     # Fig_2B_S3A(args.pre_path, args.post_path, args.task)
-    # Fig2CDE_S3BC(args.pre_path, args.post_path, args.task)
-    FigS2(args.pre_path_sweep, args.post_path_sweep, args.wies)
+    Fig2CDE_S3BC(args.pre_path, args.post_path, args.task)
+    
+    if args.task == 'effects':
+        FigS2(args.pre_path_sweep, args.post_path_sweep, args.wies)
+    
     print('== ploting finished ==')
     

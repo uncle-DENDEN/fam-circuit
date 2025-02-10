@@ -30,14 +30,12 @@ def parse_args():
     parser.add_argument("--weight_path", type=str, required=True)
     parser.add_argument("--response_path", type=str, required=True)
     parser.add_argument("--response_path_pre", type=str, required=True)
-    parser.add_argument("--save_jac", nargs='+', type=str_int, required=True, 
-                        help="image sample where jacbian matrix is saved. Should be [img, level, sample] e.g. [1, 'clear', 0]")
 
     return parser.parse_args()
 
 args = parse_args()
 
-patterns = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+patterns = [3, 5, 8]
 postfix = {0: 'clear', 1: '10%', 2: '30%', 3: '50%'}
 num_imgs = 5
 modes_ns = [200, 200, 200, 200, 200]
@@ -125,8 +123,8 @@ def analyze_eigenmodes_pre_v3(img, pp, num_modes=None):
 
         val, vl, vr, vl_prime = find_eigenmode(0, img, nl, pp, args)
 
-        if args.save_jac == [img, postfix[nl], pp]:
-            data = {'val': val, "vl": vl, "vr": vr, "vl_prime": vl_prime}
+        if pp == 0:
+            data = {'val': val, "vl_prime": vl_prime}
             joblib.dump(
                 data, 
                 os.path.join('example_jac_matrix', f'jac_pre_img{img}_{postfix[nl]}_sample{pp}.pkl')
@@ -195,11 +193,11 @@ def analyze_eigenmodes_trained_v3(epoch, img, pp, num_modes=None):
 
         val, vl, vr, vl_prime = find_eigenmode(epoch, img, nl, pp, args)
 
-        if args.save_jac == [img, postfix[nl], pp]:
-            data = {'val': val, "vl": vl, "vr": vr, "vl_prime": vl_prime}
+        if pp == 0:
+            data = {'val': val, "vl_prime": vl_prime}
             joblib.dump(
                 data, 
-                os.path.join('example_jac_matrix', f'jac_epoch{epoch}_img{img}_{postfix[nl]}_sample{pp}.pkl')
+                os.path.join('example_jac_matrix', f'jac_epoch{epoch-1}_img{img}_{postfix[nl]}_sample{pp}.pkl')
                 )
 
         # get effective dimension

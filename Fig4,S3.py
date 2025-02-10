@@ -137,9 +137,9 @@ class plot_fam_assoc:
 
         fig, ax = plt.subplots(1, 1, constrained_layout=True, figsize=(4, 2))
         labels = ['input', 'pre-trained', 'output']
-        cols = ["#7E2F8E", "#0072BD", "#77AC30"]
+        cols = ["coral", "#0072BD", "cornflowerblue"]
         for d in [0, 2]:
-            ax.plot(pcd[d][:100], 'o-', markersize=6, color=cols[d], mfc=cols[d], mec='white', label=f'{labels[d]}')
+            ax.plot(pcd[d][:25], 'o', markersize=6, mfc=cols[d], mec='white', label=f'{labels[d]}')
             
         ax.legend(frameon=False)
 
@@ -162,13 +162,13 @@ class plot_fam_assoc:
 
         for i in range(4):
             X_vi = X_v[i]
-            ax.scatter(*X_vi.T, color=plt.cm.gray(i/4), s=25, alpha=.5)
+            ax.scatter(*X_vi.T, color=plt.cm.Blues(1-(i/4)), s=25, alpha=.5)
             cov = np.cov(X_vi, rowvar=False)
             lambda_, v = np.linalg.eig(cov)
             lambda_ = np.sqrt(lambda_)
             ell_novel = Ellipse(xy=(X_vi.mean(0)[0], X_vi.mean(0)[1]), 
                                 width=lambda_[0]*2*2, height=lambda_[1]*2*2, angle=np.rad2deg(np.arccos(v[0, 0])),
-                                ec=plt.cm.gray(i/4), fc='none')
+                                ec=plt.cm.Blues(1-(i/4)), fc='none')
             ax.add_artist(ell_novel)
             ax.scatter(*X_v_mean[i], marker='+', s=100, color='tab:red', alpha=1-0.2*i)
 
@@ -191,13 +191,13 @@ class plot_fam_assoc:
 
         for i in range(4):
             X_vi = X_v[:, i]
-            ax.scatter(*X_vi.T, color=plt.cm.gray(i/4), s=25, alpha=.5)
+            ax.scatter(*X_vi.T, color=plt.cm.Oranges(1-(i/4)), s=25, alpha=.5)
             cov = np.cov(X_vi, rowvar=False)
             lambda_, v = np.linalg.eig(cov)
             lambda_ = np.sqrt(lambda_)
             ell_novel = Ellipse(xy=(X_vi.mean(0)[0], X_vi.mean(0)[1]), 
                                 width=lambda_[0]*2*2, height=lambda_[1]*2*2, angle=np.rad2deg(np.arccos(v[0, 0])),
-                                ec=plt.cm.gray(i/4), fc='none')
+                                ec=plt.cm.Oranges(1-(i/4)), fc='none')
             ax.add_artist(ell_novel)
             ax.scatter(*X_v_mean[i], marker='+', s=100, color='tab:red', alpha=1-0.2*i)
 
@@ -247,7 +247,7 @@ class plot_fam_assoc:
         day_num, nl, n_img = cosine_dist.shape
         levels = (1, 2, 3)
         labels = ("10%", "30%", "50%")
-        # cols = ("#7E2F8E", "#0072BD", "#77AC30")
+        cols = ("#308192", "#AED2E2", "#E38D26")
 
         dodge = 0.23
         dodge2 = 0.15
@@ -266,13 +266,15 @@ class plot_fam_assoc:
 
             cds_mean = cds.mean(-1)
             cds_sem = cds.std()
-            e1 = axs[0].errorbar(n+dodge, cds_mean, yerr=cds_sem, elinewidth=2.6, fmt='o', capsize=2, 
-                                capthick=2.6, color=plt.cm.plasma((n+1)/4), markersize=9, label='after')
+            e1 = axs[0].errorbar(n+dodge, cds_mean, yerr=cds_sem, elinewidth=2.6, fmt='o',
+                                 markeredgecolor='k', markerfacecolor=cols[n], ecolor='k', 
+                                 markersize=12, label='after')
             
             cds_pre_mean = cds_pre.mean()
             cds_pre_sem = cds_pre.std()
-            e2 = axs[0].errorbar(n-dodge, cds_pre_mean, yerr=cds_pre_sem, elinewidth=2.6, fmt='^', capsize=2, 
-                                capthick=2.6, color=plt.cm.plasma((n+1)/4), markersize=12, label='before')
+            e2 = axs[0].errorbar(n-dodge, cds_pre_mean, yerr=cds_pre_sem, elinewidth=2.6, fmt='^', 
+                                 markeredgecolor='k', markerfacecolor=cols[n], ecolor='k', 
+                                 markersize=12, label='before')
             
             y_pos = max(cds.max(), cds_pre.max())
             axs[0].plot([n-dodge, n+dodge], [y_pos+y_margin, y_pos+y_margin], color='k', linewidth=2)
@@ -282,13 +284,15 @@ class plot_fam_assoc:
 
             cds2_mean = cds2.mean(-1)
             cds2_sem = cds2.std()
-            f1 = axs[1].errorbar(n+dodge, cds2_mean, yerr=cds2_sem, elinewidth=2.6, fmt='o', capsize=2, 
-                                capthick=2.6, color=plt.cm.plasma((n+1)/4), markersize=9, label='after')
+            f1 = axs[1].errorbar(n+dodge, cds2_mean, yerr=cds2_sem, elinewidth=2.6, fmt='o', 
+                                 markeredgecolor='k', markerfacecolor=cols[n], ecolor='k', 
+                                 markersize=12, label='after')
             
             cds2_pre_mean = cds2_pre.mean()
             cds2_pre_sem = cds2_pre.std()
-            f2 = axs[1].errorbar(n-dodge, cds2_pre_mean, yerr=cds2_pre_sem, elinewidth=2.6, fmt='^', capsize=2, 
-                                capthick=2.6, color=plt.cm.plasma((n+1)/4), markersize=12, label='before')
+            f2 = axs[1].errorbar(n-dodge, cds2_pre_mean, yerr=cds2_pre_sem, elinewidth=2.6, fmt='^', 
+                                 markeredgecolor='k', markerfacecolor=cols[n], ecolor='k', 
+                                 markersize=12, label='before')
             
             y_pos = max(cds2.max(), cds2_pre.max())
             axs[1].plot([n-dodge, n+dodge], [y_pos+y_margin, y_pos+y_margin], color='k', linewidth=2)
@@ -337,10 +341,11 @@ class plot_fam_assoc:
         ax = fig.add_subplot(111, projection='3d')
         ax.view_init(elev=15, azim=45, roll=0)
         labels = ['target', '10%', '30%', '50%']
+        cols = ("#666666", "#308192", "#AED2E2", "#E38D26")
         for i, traj_ in enumerate(traj):
-            ax.plot(*traj_.T, '-', color=plt.cm.plasma(i/nl), linewidth=1, label=labels[i])
-            ax.scatter(*traj_[0].T, s=49, marker='x', color=plt.cm.plasma(i/nl))
-            ax.scatter(*traj_[-1].T, s=49, marker='o', color=plt.cm.plasma(i/nl))
+            ax.plot(*traj_.T, '-', color=cols[i], linewidth=1, label=labels[i])
+            ax.scatter(*traj_[0].T, s=49, marker='x', color=cols[i])
+            ax.scatter(*traj_[-1].T, s=49, marker='o', color=cols[i])
             
             ax.grid(False)
             ax.xaxis.pane.fill = False
@@ -385,4 +390,4 @@ if __name__ == '__main__':
     plot.Fig4B()
     plot.Fig4EG()
     plot.FigS3DE()
-    plot.FigS3G()
+    # plot.FigS3G()

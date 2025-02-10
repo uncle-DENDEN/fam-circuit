@@ -1,24 +1,37 @@
 #!/bin/bash
-cwd="/user_data/weifanw/familiarity_clean"  # project directory
+cwd="/user_data/weifanw/familiarity_plot"  # project directory
 
 # ====================================================================================================
 # set all parameter the same as the those used in the simulation
-task="effects"
-postfix="v3_cifar"
+# different task specify different parameter!
+task="assoc"
+postfix="mix50%_all"
 
-wie_f=30
-wies_sweep=(10 15 20 25 30 35 40 45 50)
 gamma=30
 tau_test=500
 si=250
+
+# only used for task = 'effects'
+wie_f=30 
+wies_sweep=(10 15 20 25 30 35 40 45 50)
 si_sweep=25
 
-mkdir -p ${cwd}/log_assoc
+mkdir -p ${cwd}/log_effects
 
 # plotting
 logfile=${cwd}/log_effects/plot_effects.txt
-pre_path="response_fameff/r_pre_${tau_test}ms_500_${si}_64_8_8_${wie_f}_${postfix}.npy"
-post_path="response_fameff/r_epoch4_tx${gamma}_${tau_test}ms_500_${si}_64_8_8_${wie_f}_${postfix}.npy"
+
+if [ "$task" = "assoc" ]; then
+    pre_path="response_famassoc/r_pre_${tau_test}ms_5_4x10_${si}_64_8_8_${postfix}.npy"
+    post_path="response_famassoc/r_epoch4_tx${gamma}_${tau_test}ms_5_4x10_${si}_64_8_8_${postfix}.npy"
+elif [ "$task" = "effects" ]; then
+    pre_path="response_fameff/r_pre_${tau_test}ms_500_${si}_64_8_8_${wie_f}_${postfix}.npy"
+    post_path="response_fameff/r_epoch4_tx${gamma}_${tau_test}ms_500_${si}_64_8_8_${wie_f}_${postfix}.npy"
+else
+    echo "Wronk task!"
+fi 
+
+# only used for task = 'effects'
 pre_path_sweep="response_fameff_wiesweep/r_pre_${tau_test}ms_500_${si_sweep}_64_8_8_10_${postfix}.npy"
 post_path_sweep="response_fameff_wiesweep/r_epoch4_tx${gamma}_${tau_test}ms_500_${si_sweep}_64_8_8_10_${postfix}.npy"
 

@@ -136,9 +136,9 @@ class plot_fam_assoc:
             pcd.append(pca.explained_variance_ratio_)
 
         fig, ax = plt.subplots(1, 1, constrained_layout=True, figsize=(4, 2))
-        labels = ['input', 'pre-trained', 'output']
-        cols = ["coral", "#0072BD", "cornflowerblue"]
-        for d in [0, 2]:
+        labels = ['input', 'pre', 'post']
+        cols = ["coral", "coral", "cornflowerblue"]
+        for d in [1, 2]:
             ax.plot(pcd[d][:25], 'o', markersize=6, mfc=cols[d], mec='white', label=f'{labels[d]}')
             
         ax.legend(frameon=False)
@@ -247,7 +247,7 @@ class plot_fam_assoc:
         day_num, nl, n_img = cosine_dist.shape
         levels = (1, 2, 3)
         labels = ("10%", "30%", "50%")
-        cols = ("#308192", "#AED2E2", "#E38D26")
+        cols = ("#E38D26", "#308192", "#AED2E2")
 
         dodge = 0.23
         dodge2 = 0.15
@@ -341,7 +341,7 @@ class plot_fam_assoc:
         ax = fig.add_subplot(111, projection='3d')
         ax.view_init(elev=15, azim=45, roll=0)
         labels = ['target', '10%', '30%', '50%']
-        cols = ("#666666", "#308192", "#AED2E2", "#E38D26")
+        cols = ("#666666", "#E38D26", "#308192", "#AED2E2")
         for i, traj_ in enumerate(traj):
             ax.plot(*traj_.T, '-', color=cols[i], linewidth=1, label=labels[i])
             ax.scatter(*traj_[0].T, s=49, marker='x', color=cols[i])
@@ -387,7 +387,7 @@ if __name__ == '__main__':
         args.post_path_hr
         )
     
-    plot.Fig4B()
-    plot.Fig4EG()
-    plot.FigS3DE()
-    # plot.FigS3G()
+    # plot.Fig4B()
+    # plot.Fig4EG()
+    # plot.FigS3DE()
+    plot.FigS3G()

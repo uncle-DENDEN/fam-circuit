@@ -474,7 +474,8 @@ class plot_mode:
         
         # comparison between four measures -- ddc
         nnd = 100
-        data = [ddc_ff, ddc_i[(nnd-1)//4, -1], ddc[-1], ddc_o[(nnd-1)//4, -1]]
+        data1 = [ddc_ff, ddc_i[(nnd-1)//4, -1]]
+        data2 = [ddc[-1], ddc_o[(nnd-1)//4, -1]]
 
         fig, (ax1, ax2) = plt.subplots(1, 2, constrained_layout=True, figsize=(5.4, 4), sharey=True)
         # for ax in (ax1, ax2):
@@ -482,42 +483,50 @@ class plot_mode:
         #     ax.set_xticklabels(['0%-10%', '10%-30%', '30%-50%'], rotation=30, ha='center')
         #     ax.set_yticks([0.0, 0.2, 0.4, 0.6], [0.0, 0.2, 0.4, 0.6])
 
-        labels = [r'$\alpha$', r'$\tilde{L}^T \alpha$', r'$r^e$', r'$L^T r$']
-        fmts = ['--o', '-^', '--o', '-^']
-        dodge = [-0.075, -0.025, 0.025, 0.075]
+        dodge = [-0.2, 0.2]
+        cols = ['#1f77b4', '#FEA040', '#b2df8a', "#fb9a99"]
+        labels = [r'$\alpha$', r'$\tilde{L}^T \alpha$'] 
+        labels2 = [r'$r^e$', r'$L^T r$']
         x = np.arange(3)
-        for i, mat in enumerate(data): 
-            x_ = x + dodge[i]
-            mat_mean = mat.mean(-1)
-            mat_sem = sem(mat, -1)
-            label = labels[i]
-            fmt = fmts[i]
-            if (i == 0 or i == 1):
-                ax1.errorbar(x_, mat_mean, yerr=mat_sem, fmt=fmt, label=label, 
-                            color='#1f77b4', markeredgecolor='white', 
-                            markersize=10, elinewidth=1.6, capsize=0,)
-            else:
-                ax2.errorbar(x_, mat_mean, yerr=mat_sem, fmt=fmt, label=label,
-                            color='#FEA040', markeredgecolor='white', 
-                            markersize=10, elinewidth=1.6, capsize=0,)
+        for i, mat in enumerate(data1): 
+            ax1.boxplot(
+                mat.T, positions=x+dodge[i], widths=0.4,
+                notch=False, showcaps=False, patch_artist=True,
+                flierprops={"marker": "o", "color": 'k'},
+                boxprops={"facecolor": cols[i], "alpha": .5},
+                medianprops={"color": cols[i], "linewidth": 2},
+                label=labels[i], zorder=2
+            )
+        for i, mat in enumerate(data2): 
+            # '#FEA040'
+            ax2.boxplot(
+                mat.T, positions=x+dodge[i], widths=0.4,
+                notch=False, showcaps=False, patch_artist=True,
+                flierprops={"marker": "o", "color": 'k'},
+                boxprops={"facecolor": cols[i], "alpha": .5},
+                medianprops={"color": cols[i], "linewidth": 2},
+                label=labels2[i], zorder=2
+            )
 
-        ax1.text(0.2, 0.5, r'$\alpha$', fontsize=15, color="#1f77b4")
-        ax1.text(0.17, 0.20, r'$\tilde{L}^T \alpha$', fontsize=15, color="#1f77b4")
-        ax2.text(0.2, 0.29, r'$r^e$', fontsize=15, color="#FEA040")
-        ax2.text(0.22, 0.05, r'$L^T r$', fontsize=15, color="#FEA040")
+        # ax1.text(0.2, 0.5, r'$\alpha$', fontsize=15, color="#0072BD")
+        # ax1.text(0.17, 0.20, r'$\tilde{L}^T \alpha$', fontsize=15, color="#0072BD")
+        # ax2.text(0.2, 0.29, r'$r^e$', fontsize=15, color="firebrick")
+        # ax2.text(0.22, 0.06, r'$L^T r$', fontsize=15, color="firebrick")
 
         ax1.set_ylabel(r'$\mathcal{D}_{N/C}$')
         for ax in (ax1, ax2):
             ax.set_ylim(0, 0.61)
-            ax.set_xlim(-0.3, 2.3)
+            # ax.set_xlim(-0.3, 2.3)
 
-            ax.spines['bottom'].set_position(('data', 0))
+            # ax.spines['bottom'].set_position(('data', 0))
             ax.spines['right'].set_visible(False)
             ax.spines['top'].set_visible(False)
 
             ax.set_xticks(np.arange(3))
             ax.set_xticklabels(['0-10%', '10-30%', '30-50%'], rotation=20)
             ax.set_yticks([0.0, 0.2, 0.4, 0.6], [0.0, 0.2, 0.4, 0.6])
+        ax1.legend(frameon=True, loc='lower right')
+        ax2.legend(frameon=True, loc='upper left')
         
         fig.savefig(os.path.join(self.fig5_path, 'fig5C.png'))
 
@@ -529,14 +538,14 @@ class plot_mode:
         x_plot = np.arange(0, 200, 4)+1
         fmt = ['--', '-', ':']
         labels = ['0-10%', '10-30%', '30-50%']
-        cols = ("#308192", "#AED2E2", "#E38D26")
+        cols = ("#E38D26", "#308192", "#AED2E2")
         for nl in range(3):
             di = (data[1][:, nl] - np.expand_dims(data[0][nl], 0)) / np.expand_dims(data[0][nl], 0)
             do = (data[3][:, nl] - np.expand_dims(data[2][nl], 0)) / np.expand_dims(data[2][nl], 0)
-            di_mean = di.mean(-1)
-            di_sem = sem(di, -1)
-            do_mean = do.mean(-1)
-            do_sem = sem(do, -1)
+            di_mean = np.nanmean(di, -1)
+            di_sem = sem(di, -1, nan_policy='omit')
+            do_mean = np.nanmean(do, -1)
+            do_sem = sem(do, -1, nan_policy='omit')
             
             # plot
             # ax1.plot(x_plot, di_mean, fmt[nl], label=labels[nl], color=plt.cm.plasma((nl+1)/4))
@@ -567,15 +576,11 @@ class plot_mode:
             ax2.set_ylim(-0.79, -0.05)
             ax2.set_yticks([-0.7, -0.4, -0.1], [-0.7, -0.4, -0.1])
 
-            # ax1.spines['left'].set_position(('data', 0))
             ax1.spines['right'].set_visible(False)
             ax1.spines['top'].set_visible(False)
-            # ax1.spines['bottom'].set_position(('data', 0))
 
-            # ax2.spines['left'].set_position(('data', 0))
             ax2.spines['right'].set_visible(False)
             ax2.spines['top'].set_visible(False)
-            # ax2.spines['bottom'].set_position(('data', 0))
         
         fig.savefig(os.path.join(self.figS4_path, 'figS4BC.png'))
 
@@ -593,44 +598,42 @@ class plot_mode:
         nnd = 100
         ddc_all = [[ddc_o[(nnd-1)//4], ddc_pre_o[(nnd-1)//4]], [ddc_i[(nnd-1)//4], ddc_pre_i[(nnd-1)//4]], [ddc[1:], ddc[0]]]
         titles = [r'$L^T r$', r'$\tilde{L}^T \alpha$', r'$r^e$']
-        cols = ("#308192", "#AED2E2", "#E38D26")
+        cols = ("#E38D26", "#308192", "#AED2E2")
 
-        dodge = 0.3
+        dodge = 0.2
         fig, axs = plt.subplots(1, 3, constrained_layout=True, figsize=(12, 3.4))
-        locs = ['upper left', 'upper right', 'lower right']
         for i, (ax, ddc_pair) in enumerate(zip(axs, ddc_all)):
             post, pre = ddc_pair 
-            post_mean = post.mean(-1)[:, :] 
-            post_sem = sem(post, -1)[:, :]
-            pre_mean = pre.mean(-1)[:]
-            pre_sem = sem(pre, -1)[:] 
 
-            # # nl as x axis
-            # x = np.arange(3)
-            ax.plot([], [], 'D', color='black', label='pre')
+            # nl as x axis
+            # ax.plot([], [], 'D', color='black', label='pre')
             for m in range(3):
-                ax.errorbar(m - dodge, pre_mean[m], yerr=pre_sem[m], fmt='-D', 
-                            color=cols[i], markeredgecolor='white', 
-                            markersize=8, elinewidth=1.6, capsize=0, )
-            ax.plot([], [], 'o', color='black', label='epoch1')
+                ax.boxplot(
+                    pre[m], positions=[m-dodge],
+                    notch=False, showcaps=False, patch_artist=True,
+                    flierprops={"marker": "o", "color": 'k'},
+                    boxprops={"facecolor": cols[0], "alpha": .5},
+                    medianprops={"color": cols[0], "linewidth": 2},
+                    label='pre-training' if m == 0 else '_nolegend_'
+                )
             for m in range(3):
-                ax.errorbar(m, post_mean[0, m], yerr=post_sem[0, m], fmt='-o', 
-                            color=cols[i], markeredgecolor='white', 
-                            markersize=8, elinewidth=1.6, capsize=0, )
-            ax.plot([], [], '^', color='black', label='epoch5')
+                ax.boxplot(
+                    post[0, m], positions=[m],
+                    notch=False, showcaps=False, patch_artist=True,
+                    flierprops={"marker": "o", "color": 'k'},
+                    boxprops={"facecolor": cols[1], "alpha": .5},
+                    medianprops={"color": cols[1], "linewidth": 2},
+                    label='epoch1' if m == 0 else '_nolegend_'
+                )
             for m in range(3):
-                ax.errorbar(m + dodge, post_mean[-1, m], yerr=post_sem[-1, m], fmt='-^', 
-                            color=cols[i], markeredgecolor='white', 
-                            markersize=8, elinewidth=1.6, capsize=0, )
-            
-            for j in range(3):
-                x_ = [j-dodge, j, j+dodge]
-                y = [pre_mean[j], post_mean[0, j], post_mean[-1, j]]
-                ax.plot(x_, y, '-', color=cols[i])
-                
-                for m in range(5):
-                    y = [pre[j, m], post[0, j, m], post[-1, j, m]]
-                    ax.plot(x_, y, ':.', color='lightgrey', alpha=.8)
+                ax.boxplot(
+                    post[-1, m], positions=[m+dodge],
+                    notch=False, showcaps=False, patch_artist=True,
+                    flierprops={"marker": "o", "color": 'k'},
+                    boxprops={"facecolor": cols[2], "alpha": .5},
+                    medianprops={"color": cols[2], "linewidth": 2},
+                    label='epoch5' if m == 0 else '_nolegend_'
+                )
 
             ax.set_xticks([0, 1, 2], ['0%-10%', '10%-30%', '30%-50%'], rotation=20)
             ax.set_xlim((-0.55, 2.55))
@@ -647,48 +650,47 @@ class plot_mode:
         ddc_all = [[ddc_o, ddc_pre_o], [ddc_i, ddc_pre_i]]
 
         dodge = 0.3
-        x = np.repeat(np.arange(6), self.num_imgs)
+        x = np.repeat(np.arange(3), self.num_imgs)
+        rng = np.random.default_rng()
+        # method = stats.BootstrapMethod(method='BCa', random_state=rng)
 
         fig, axs = plt.subplots(1, 2, constrained_layout=True, figsize=(8, 4))
         tts = [r'$L^T r$', r'$\tilde{L}^T \alpha$']
         for j, (ax, ddc_pair) in enumerate(zip(axs, ddc_all)):
-            post, pre = ddc_pair  # nm, day, nl, img; nm, nl, img
-            y = np.concatenate([np.expand_dims(pre, 1), post], 1)  # nm, days, nl, img
-            # y = np.concatenate([pre] + [post[:, i] for i in range(post.shape[1])], -1)  # nm, nl, img*days
-            # post = post[:, -1]  # nm, nl, img
-            corr = np.zeros((50, 3, 5))
-            # corr = np.zeros((50, 3))
+            post, pre = ddc_pair  # day, nl, img; nl, img
+            y = np.concatenate([pre, post[:, 0], post[:, -1]], -1) # nn, nl, day*img
+            rrs = np.zeros((50, 3))
             for nnd in range(50):
                 for nl in range(3):
-                    for img in range(5):
-                        res = pearsonr(np.arange(6), y[nnd, :, nl, img])
-                        corr[nnd, nl, img] = res.statistic
-            
+                    res = np.corrcoef(x, y[nnd, nl])[0, 1]
+                    rrs[nnd, nl] = res
             # plot
-            fmt = ['--', '-', ':']
-            labels = ['0-10%', '10-30%', '30-50%']
+            labels = ['0%-10%', '10%-30%', '30%-50%']
             x_plot = np.arange(0, 200, 4)+1
-            dtm = corr.mean(-1)
-            dts = sem(corr, -1)
             for i in range(3):
-                ax.errorbar(x_plot, dtm[:, i], yerr=dts[:, i], fmt=fmt[i], label=labels[i], 
-                            color=cols[i], markeredgecolor='white', 
-                            markersize=6, elinewidth=1.6, capsize=0,)
-                # ax.plot(x_plot, corr[:, i], fmt[i], label=labels[i], color=cols[i])
-                ax.scatter([100], [dtm[24, i]], marker='o', edgecolor='white', facecolor='#E84445', zorder=2*(i+1))
-            ax.axhline(y=0, xmin=0.04, xmax=0.96, linewidth=1, color='r')
+                ax.plot(x_plot, rrs[:, i], 'o', label=labels[i], mfc=cols[i], mec='white')
+                ax.scatter([100], [rrs[24, i]], s=64, marker='o', edgecolor='white', facecolor='k', zorder=2)
+                # ax.fill_between(x_plot, cils[:, i], cius[:, i], alpha=.5, color=cols[i], label=labels[i])
+            # ax.axhline(y=0, linestyle='dashed', linewidth=2, color='k')
+            # ax.axhline(y=0, xmin=0.04, xmax=0.96, linewidth=1, color='r')
             if j == 0:
-                ax.legend(frameon=False, loc='upper right')
-            ax.set_ylabel(r'$\mathcal{D}_{N/C}$ training effect')
-            ax.set_xlabel('subspace dimension')
+                ax.legend(frameon=False, loc='right')
+            ax.set_ylabel(r'$\mathcal{D}_{N/C}$ correlation')
             ax.set_title(tts[j])
-            # ax.set_ylim(-0.84, 0.3)
-            # ax.set_yticks([-0.6, -0.2, 0.2], [-0.6, -0.2, 0.2])
+            ax.set_ylim(-0.84, 0.3)
+            ax.set_yticks([-0.6, -0.2, 0.2], [-0.6, -0.2, 0.2])
 
-            # ax.spines['left'].set_position(('data', 0))
+            ax.spines['bottom'].set_position(('data', 0))
+            ax.xaxis.set_ticks_position('none')
+            ax.xaxis.set_ticklabels([])
+
             ax.spines['right'].set_visible(False)
             ax.spines['top'].set_visible(False)
-            # ax.spines['bottom'].set_position(('data', 0))
+
+            secax = ax.secondary_xaxis("bottom")
+            secax.set_xlabel("subspace dimension")  # The label will appear below the plot
+            secax.tick_params(direction='out')
+            secax.spines["bottom"].set_visible(False)
         
         fig.savefig(os.path.join(self.figS4_path, 'figS4DE.png'))
 

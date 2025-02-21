@@ -240,3 +240,61 @@ def seqUnmix(ys, t_ind, n_ind, n_imgs, npa, temporal_seq=True, flatten_imgs=True
         ys = rearrange(ys, 'i nl np ts n -> (i nl np) ts n') if temporal_seq else rearrange(ys, 'i nl np n -> (i nl np) n')
     
     return ys
+
+
+def dixon_q_test_1d(x, alpha=0.05):
+    """
+    Performs Dixon's Q test on a 1D array x (with length between 3 and 30).
+    Returns the index of the outlier if detected, otherwise returns None.
+    """
+    n = len(x)
+    if n < 3 or n > 30:
+        return None
+    
+    sorted_indices = np.argsort(x)
+    sorted_data = x[sorted_indices]
+    
+    # Calculate Q statistics for the minimum and maximum values.
+    Q_min = (sorted_data[1] - sorted_data[0]) / (sorted_data[-1] - sorted_data[0])
+    Q_max = (sorted_data[-1] - sorted_data[-2]) / (sorted_data[-1] - sorted_data[0])
+    
+    # Critical values for Dixon's Q test (for alpha = 0.05)
+    critical_values = {
+        3: 0.941,
+        4: 0.765,
+        5: 0.642,
+        6: 0.560,
+        7: 0.507,
+        8: 0.468,
+        9: 0.437,
+        10: 0.412,
+        # Add more values if necessary
+    }
+    Q_critical = critical_values.get(n, 0.412) 
+    
+    if Q_min > Q_critical:
+        return sorted_indices[0]
+    elif Q_max > Q_critical:
+        return sorted_indices[-1]
+    else:
+        return None
+    
+
+def replace_outlier(data, alpha=0.05):
+    """
+    Applies Dixon's Q test along the last axis of the array 'arr'. If an outlier is
+    detected in a slice, that element is replaced with np.nan.
+    """
+    data = data.astype(float)
+
+    def process_slice(x):
+        # Only perform the test if there are enough points.
+        if x.size < 3 or x.size > 30:
+            return x 
+        outlier_idx = dixon_q_test_1d(x, alpha=alpha)
+        if outlier_idx is not None:
+            x[outlier_idx] = np.nan
+        return x
+
+    result = np.apply_along_axis(process_slice, axis=-1, arr=data)
+    return result
